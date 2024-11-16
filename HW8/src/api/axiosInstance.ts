@@ -10,14 +10,11 @@ const axiosInstance = axios.create({
   },
 });
 
-// Добавляем интерсептор для добавления токена в каждый запрос
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Получаем токен из state или localStorage
     const state = store.getState();
     const token = state?.auth?.accessToken || localStorage.getItem('token');
 
-    // Проверяем, существует ли токен
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {

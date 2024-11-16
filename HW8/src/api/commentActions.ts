@@ -21,3 +21,13 @@ export const addComment = async (postId: number, text: string) => {
     throw error;
   }
 };
+
+export const deleteComment = async (postId: number, commentId: number) => {
+  try {
+    await axiosInstance.delete(`/api/exhibits/${postId}/comments/${commentId}`);
+    return true;
+  } catch (error) {
+    console.error('Failed to delete comment:', error);
+    throw error;
+  }
+};

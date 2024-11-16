@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Post.module.css';
 import { fetchPosts } from '../../api/exhibitActions';
-import { fetchComments, addComment } from '../../api/commentActions';
+import {
+  fetchComments,
+  addComment,
+  deleteComment,
+} from '../../api/commentActions';
 import Comment from '../Comment/Comment';
+import store from '../../store';
 
 interface CommentData {
   id: number;
@@ -31,6 +36,8 @@ const Post: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
+  const [hasMore, setHasMore] = useState(true);
+  const currentUser = store.getState().auth.userName || 'Unauth';
 
   const loadPosts = async (page: number) => {
     try {
@@ -42,7 +49,10 @@ const Post: React.FC = () => {
           return { ...post, comments };
         })
       );
-      setPosts(postsWithComments);
+      setPosts((prev) =>
+        page === 1 ? postsWithComments : [...prev, ...postsWithComments]
+      );
+      setHasMore(postList.length > 0);
     } catch (error) {
       console.error('Failed to fetch posts or comments:', error);
     } finally {
@@ -55,31 +65,43 @@ const Post: React.FC = () => {
     if (!commentText) return;
 
     try {
-      // Отправляем комментарий на сервер
       const newComment = await addComment(postId, commentText);
-
-      // Обновляем состояние с новым комментарием
-      const updatedPosts = posts.map((post) => {
-        if (post.id === postId) {
-          return { ...post, comments: [...(post.comments || []), newComment] };
-        }
-        return post;
-      });
-
-      setPosts(updatedPosts);
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? { ...post, comments: [...(post.comments || []), newComment] }
+            : post
+        )
+      );
       setNewComments({ ...newComments, [postId]: '' });
     } catch (error) {
       console.error('Failed to add comment:', error);
     }
   };
 
+  const handleDeleteComment = async (postId: number, commentId: number) => {
+    try {
+      await deleteComment(postId, commentId);
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                comments: post.comments?.filter(
+                  (comment) => comment.id !== commentId
+                ),
+              }
+            : post
+        )
+      );
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+    }
+  };
+
   useEffect(() => {
     loadPosts(currentPage);
   }, [currentPage]);
-
-  if (loading) {
-    return <p>Loading posts...</p>;
-  }
 
   return (
     <div>
@@ -102,34 +124,33 @@ const Post: React.FC = () => {
           <div className={styles.commentsSection}>
             <h3>Comments:</h3>
             <div className={styles.comments}>
-              {post.comments && post.comments.length > 0 ? (
-                post.comments.map((comment) => (
-                  <Comment
-                    key={comment.id}
-                    username={comment.user.username}
-                    content={comment.text}
-                  />
-                ))
-              ) : (
-                <p>No comments yet.</p>
-              )}
+              {post.comments?.map((comment) => (
+                <Comment
+                  key={comment.id}
+                  id={comment.id}
+                  username={comment.user.username}
+                  content={comment.text}
+                  onDelete={(commentId) =>
+                    handleDeleteComment(post.id, commentId)
+                  }
+                  currentUser={currentUser}
+                />
+              ))}
             </div>
-            <div className={styles.commentForm}>
-              <textarea
-                placeholder="Write a comment..."
-                value={newComments[post.id] || ''}
-                onChange={(e) =>
-                  setNewComments({ ...newComments, [post.id]: e.target.value })
-                }
-                className={styles.textarea}
-              />
-              <button
-                onClick={() => handleAddComment(post.id)}
-                className={styles.submitButton}
-              >
-                Post comment
-              </button>
-            </div>
+            <textarea
+              placeholder="Write a comment..."
+              value={newComments[post.id] || ''}
+              onChange={(e) =>
+                setNewComments({ ...newComments, [post.id]: e.target.value })
+              }
+              className={styles.textarea}
+            />
+            <button
+              onClick={() => handleAddComment(post.id)}
+              className={styles.submitButton}
+            >
+              Post comment
+            </button>
           </div>
         </div>
       ))}
@@ -140,8 +161,12 @@ const Post: React.FC = () => {
         >
           Previous
         </button>
-        <span>Page {currentPage}</span>
-        <button onClick={() => setCurrentPage((prev) => prev + 1)}>Next</button>
+        <button
+          onClick={() => setCurrentPage((prev) => (hasMore ? prev + 1 : prev))}
+          disabled={!hasMore}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

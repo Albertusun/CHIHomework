@@ -11,7 +11,7 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  userName: null,
+  userName: localStorage.getItem('userName'),
   userId: null,
   accessToken: localStorage.getItem('token'),
   refreshToken: null,
@@ -31,6 +31,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       localStorage.removeItem('token');
+      localStorage.removeItem('userName');
     },
     restoreSession(state) {
       const token = localStorage.getItem('token');
@@ -49,6 +50,7 @@ const authSlice = createSlice({
         state.refreshToken = action.payload.refresh_token;
         state.isAuthenticated = true;
         state.error = null;
+        localStorage.setItem('userName', action.payload.userName);
         localStorage.setItem('token', action.payload.access_token);
       })
       .addCase(login.rejected, (state, action) => {
@@ -61,6 +63,7 @@ const authSlice = createSlice({
         state.refreshToken = action.payload.refresh_token;
         state.isAuthenticated = true;
         state.error = null;
+        localStorage.setItem('userName', action.payload.userName);
         localStorage.setItem('token', action.payload.access_token);
       })
       .addCase(register.rejected, (state, action) => {
