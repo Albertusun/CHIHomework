@@ -113,21 +113,22 @@ const Post: React.FC = ({ isMyPosts }) => {
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage((prevPage) => prevPage + 1);
-      loadPosts(currentPage + 1);
     }
   };
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage((prevPage) => prevPage - 1);
-      loadPosts(currentPage - 1);
     }
   };
 
   useEffect(() => {
-    setCurrentPage(1);
-    loadPosts(1);
-  }, [isMyPosts, currentPage]);
+    if (isMyPosts) {
+      loadPosts(1);
+    } else {
+      loadPosts(currentPage);
+    }
+  }, [currentPage, isMyPosts]);
 
   return (
     <div>
@@ -187,7 +188,7 @@ const Post: React.FC = ({ isMyPosts }) => {
           </div>
         ))
       )}
-      {posts.length > 0 && (
+      {posts.length > 9 && (
         <div className={styles.pagination}>
           <button onClick={handlePrevPage} disabled={currentPage === 1}>
             {'<'} Previous
