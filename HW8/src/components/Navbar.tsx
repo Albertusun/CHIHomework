@@ -15,7 +15,7 @@ import * as React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 
-const pages = ['Posts', 'Pricing', 'Blog'];
+const pages = ['Home', 'My Posts'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 function ResponsiveAppBar() {
@@ -50,14 +50,15 @@ function ResponsiveAppBar() {
   const handleNavigate = (page: string) => {
     handleCloseNavMenu();
     switch (page) {
-      case 'Posts':
-        navigate('/posts');
+      case 'Home':
+        navigate('/');
         break;
-      case 'Pricing':
-        navigate('/pricing');
-        break;
-      case 'Blog':
-        navigate('/blog');
+      case 'My Posts':
+        if (!isAuthenticated) {
+          navigate('/login');
+          return;
+        }
+        navigate('/my-posts');
         break;
       default:
         break;
@@ -68,8 +69,7 @@ function ResponsiveAppBar() {
     handleCloseUserMenu();
 
     if (setting === 'Logout') {
-      // Логика выхода из системы
-      dispatch({ type: 'auth/logout' }); // Пример: экшн для сброса состояния авторизации
+      dispatch({ type: 'auth/logout' });
       navigate('/login');
     } else {
       console.log(`Navigate to ${setting}`);

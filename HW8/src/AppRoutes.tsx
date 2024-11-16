@@ -7,10 +7,9 @@ import PostPage from './layouts/PostPage';
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/posts" element={<PostPage />} />
+      <Route path="/" element={<PostPage />} />
       <Route path="/login" element={<LoginForm />} />
       <Route path="/signup" element={<SignUpForm />} />
-      <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };

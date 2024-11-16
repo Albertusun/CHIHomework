@@ -1,27 +1,35 @@
 import React, { useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { register } from '../../api/userActions';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './SignupForm.module.css';
-import { Link } from 'react-router-dom';
 
 const SignupForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { error } = useAppSelector((state) => state.auth);
 
-  const handleSignup = (event: React.FormEvent) => {
+  const handleSignup = async (event: React.FormEvent) => {
     event.preventDefault();
     if (password !== confirmPassword) {
       alert('Passwords do not match!');
       return;
     }
-    console.log('Username:', username);
-    console.log('Password:', password);
-    // Здесь можно добавить логику для регистрации
+
+    const result = await dispatch(register({ username, password }));
+    if (register.fulfilled.match(result)) {
+      navigate('/login');
+    }
   };
 
   return (
     <div className={styles.container}>
       <form onSubmit={handleSignup} className={styles.form}>
         <h2 className={styles.title}>Signup</h2>
+        {error && <p className={styles.error}>{error}</p>}
         <input
           type="text"
           placeholder="Username"

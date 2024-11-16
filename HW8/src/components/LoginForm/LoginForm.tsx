@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { login } from '../../store/authSlice';
-import { useNavigate } from 'react-router-dom';
+import { login } from '../../api/userActions';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './LoginForm.module.css';
 
 const LoginForm: React.FC = () => {
@@ -15,7 +15,7 @@ const LoginForm: React.FC = () => {
     event.preventDefault();
     const result = await dispatch(login({ username, password }));
     if (login.fulfilled.match(result)) {
-      navigate('/dashboard'); // Redirect to dashboard or home
+      navigate('/');
     }
   };
 
@@ -41,6 +41,9 @@ const LoginForm: React.FC = () => {
         <button type="submit" className={styles.button}>
           Login
         </button>
+        <p className={styles.signup}>
+          Not a Member? <Link to="/signup"> Signup</Link>
+        </p>
       </form>
     </div>
   );

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import store from '../store';
 
-const BASE_URL = 'http://ec2-13-49-67-34.eu-north-1.compute.amazonaws.com/api/';
+const BASE_URL = 'http://ec2-13-49-67-34.eu-north-1.compute.amazonaws.com/';
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -23,7 +23,6 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Удаляем токен при ошибке авторизации
       localStorage.removeItem('token');
       store.dispatch({ type: 'auth/logout' });
       window.location.href = '/login';
