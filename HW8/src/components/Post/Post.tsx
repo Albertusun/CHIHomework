@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Post.module.css';
-import { fetchPosts, fetchComments } from '../../api/api';
+import { fetchPosts } from '../../api/exhibitActions';
+import { fetchComments, addComment } from '../../api/commentActions';
 import Comment from '../Comment/Comment';
 
 interface CommentData {
@@ -49,26 +50,27 @@ const Post: React.FC = () => {
     }
   };
 
-  const handleAddComment = (postId: number) => {
+  const handleAddComment = async (postId: number) => {
     const commentText = newComments[postId]?.trim();
     if (!commentText) return;
 
-    // Симулируем добавление комментария (в реальном случае нужно отправить на сервер)
-    const updatedPosts = posts.map((post) => {
-      if (post.id === postId) {
-        const newComment = {
-          id: Date.now(),
-          text: commentText,
-          createdAt: new Date().toISOString(),
-          user: { id: 0, username: 'You' },
-        };
-        return { ...post, comments: [...(post.comments || []), newComment] };
-      }
-      return post;
-    });
+    try {
+      // Отправляем комментарий на сервер
+      const newComment = await addComment(postId, commentText);
 
-    setPosts(updatedPosts);
-    setNewComments({ ...newComments, [postId]: '' });
+      // Обновляем состояние с новым комментарием
+      const updatedPosts = posts.map((post) => {
+        if (post.id === postId) {
+          return { ...post, comments: [...(post.comments || []), newComment] };
+        }
+        return post;
+      });
+
+      setPosts(updatedPosts);
+      setNewComments({ ...newComments, [postId]: '' });
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+    }
   };
 
   useEffect(() => {

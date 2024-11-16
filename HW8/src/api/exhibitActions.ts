@@ -1,16 +1,10 @@
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 
-const API_BASE_URL =
-  'http://ec2-13-49-67-34.eu-north-1.compute.amazonaws.com/api/exhibits';
+const BASE_URL = 'http://ec2-13-49-67-34.eu-north-1.compute.amazonaws.com/api';
 
-export const fetchExhibits = async (page: number, limit: number) => {
-  const response = await axios.get(
-    `${API_BASE_URL}?page=${page}&limit=${limit}`
+export const fetchPosts = async (page: number = 1, limit: number = 10) => {
+  const { data } = await axiosInstance.get(
+    `${BASE_URL}/exhibits?page=${page}&limit=${limit}`
   );
-  return response.data;
-};
-
-export const fetchComments = async (exhibitId: number) => {
-  const response = await axios.get(`${API_BASE_URL}/${exhibitId}/comments`);
-  return response.data;
+  return data.data;
 };

@@ -5,24 +5,36 @@ const BASE_URL = 'http://ec2-13-49-67-34.eu-north-1.compute.amazonaws.com/';
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
+// Добавляем интерсептор для добавления токена в каждый запрос
 axiosInstance.interceptors.request.use(
   (config) => {
+    // Получаем токен из state или localStorage
     const state = store.getState();
-    const token = state.auth.accessToken || localStorage.getItem('token');
+    const token = state?.auth?.accessToken || localStorage.getItem('token');
+
+    // Проверяем, существует ли токен
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn('Token is missing');
     }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
+// Интерсептор для обработки ошибок ответа
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.error('Unauthorized - logging out');
       localStorage.removeItem('token');
       store.dispatch({ type: 'auth/logout' });
       window.location.href = '/login';
