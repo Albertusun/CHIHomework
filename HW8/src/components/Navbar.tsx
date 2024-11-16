@@ -12,13 +12,12 @@ import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-const pages = ['Products', 'Pricing', 'Blog'];
+const pages = ['Posts', 'Pricing', 'Blog'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 function ResponsiveAppBar() {
-  // Состояние для отслеживания авторизации пользователя
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
@@ -27,6 +26,8 @@ function ResponsiveAppBar() {
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
     null
   );
+
+  const navigate = useNavigate(); // Хук для навигации
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -45,8 +46,24 @@ function ResponsiveAppBar() {
   };
 
   const handleLogin = () => {
-    // Здесь можно добавить логику для входа
     console.log('Login clicked');
+  };
+
+  const handleNavigate = (page: string) => {
+    handleCloseNavMenu();
+    switch (page) {
+      case 'Posts':
+        navigate('/posts');
+        break;
+      case 'Pricing':
+        navigate('/pricing');
+        break;
+      case 'Blog':
+        navigate('/blog');
+        break;
+      default:
+        break;
+    }
   };
 
   return (
@@ -100,7 +117,7 @@ function ResponsiveAppBar() {
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
+                <MenuItem key={page} onClick={() => handleNavigate(page)}>
                   <Typography sx={{ textAlign: 'center' }}>{page}</Typography>
                 </MenuItem>
               ))}
@@ -129,7 +146,7 @@ function ResponsiveAppBar() {
             {pages.map((page) => (
               <Button
                 key={page}
-                onClick={handleCloseNavMenu}
+                onClick={() => handleNavigate(page)}
                 sx={{ my: 2, color: 'white', display: 'block' }}
               >
                 {page}
