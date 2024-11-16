@@ -42,12 +42,16 @@ const Post: React.FC = ({ isMyPosts }) => {
   const loadPosts = async (page: number) => {
     try {
       setLoading(true);
-      const { posts, meta } = await fetchPosts(page, isMyPosts);
-      setPosts(posts);
-      setCurrentPage(meta.currentPage);
-      setTotalPages(meta.totalPages);
+      const postList = await fetchPosts(page, isMyPosts);
+      const postsWithComments = await Promise.all(
+        postList.map(async (post: PostData) => {
+          const comments = await fetchComments(post.id);
+          return { ...post, comments };
+        })
+      );
+      setPosts(postsWithComments);
     } catch (error) {
-      console.error('Failed to fetch posts:', error);
+      console.error('Failed to fetch posts or comments:', error);
     } finally {
       setLoading(false);
     }
@@ -108,12 +112,14 @@ const Post: React.FC = ({ isMyPosts }) => {
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
+      setCurrentPage((prevPage) => prevPage + 1);
       loadPosts(currentPage + 1);
     }
   };
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
       loadPosts(currentPage - 1);
     }
   };
