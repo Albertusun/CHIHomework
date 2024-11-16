@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Post.module.css';
-import { fetchPosts } from '../../api/exhibitActions';
+import { fetchPosts, deletePost } from '../../api/exhibitActions';
 import {
   fetchComments,
   addComment,
@@ -31,30 +31,23 @@ interface PostData {
   comments?: CommentData[];
 }
 
-const Post: React.FC = () => {
+const Post: React.FC = ({ isMyPosts }) => {
   const [posts, setPosts] = useState<PostData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(10);
   const [loading, setLoading] = useState(true);
   const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
-  const [hasMore, setHasMore] = useState(true);
   const currentUser = store.getState().auth.userName || 'Unauth';
 
   const loadPosts = async (page: number) => {
     try {
       setLoading(true);
-      const postList = await fetchPosts(page);
-      const postsWithComments = await Promise.all(
-        postList.map(async (post: PostData) => {
-          const comments = await fetchComments(post.id);
-          return { ...post, comments };
-        })
-      );
-      setPosts((prev) =>
-        page === 1 ? postsWithComments : [...prev, ...postsWithComments]
-      );
-      setHasMore(postList.length > 0);
+      const { posts, meta } = await fetchPosts(page, isMyPosts);
+      setPosts(posts);
+      setCurrentPage(meta.currentPage);
+      setTotalPages(meta.totalPages);
     } catch (error) {
-      console.error('Failed to fetch posts or comments:', error);
+      console.error('Failed to fetch posts:', error);
     } finally {
       setLoading(false);
     }
@@ -79,6 +72,20 @@ const Post: React.FC = () => {
     }
   };
 
+  const handleDelete = async (postId: string) => {
+    if (!window.confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
+    try {
+      await deletePost(postId);
+      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Failed to delete post. Please try again.');
+    }
+  };
+
   const handleDeleteComment = async (postId: number, commentId: number) => {
     try {
       await deleteComment(postId, commentId);
@@ -99,75 +106,97 @@ const Post: React.FC = () => {
     }
   };
 
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      loadPosts(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      loadPosts(currentPage - 1);
+    }
+  };
+
   useEffect(() => {
-    loadPosts(currentPage);
-  }, [currentPage]);
+    setCurrentPage(1);
+    loadPosts(1);
+  }, [isMyPosts, currentPage]);
 
   return (
     <div>
-      {posts.map((post) => (
-        <div key={post.id} className={styles.postContainer}>
-          <div className={styles.post}>
-            <div className={styles.header}>
-              <span className={styles.username}>{post.user.username}</span>
-              <span className={styles.date}>
-                {new Date(post.createdAt).toLocaleString()}
-              </span>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        posts.map((post) => (
+          <div key={post.id} className={styles.postContainer}>
+            <div className={styles.post}>
+              <div className={styles.header}>
+                <span className={styles.username}>{post.user.username}</span>
+                <span className={styles.date}>
+                  {new Date(post.createdAt).toLocaleString()}
+                </span>
+              </div>
+              <img
+                src={`http://ec2-13-49-67-34.eu-north-1.compute.amazonaws.com${post.imageUrl}`}
+                alt={post.description}
+                className={styles.image}
+              />
+              <p className={styles.description}>{post.description}</p>
+              {currentUser === post.user.username && (
+                <button onClick={() => handleDelete(post.id)}>Delete</button>
+              )}
             </div>
-            <img
-              src={`http://ec2-13-49-67-34.eu-north-1.compute.amazonaws.com${post.imageUrl}`}
-              alt={post.description}
-              className={styles.image}
-            />
-            <p className={styles.description}>{post.description}</p>
-          </div>
-          <div className={styles.commentsSection}>
-            <h3>Comments:</h3>
-            <div className={styles.comments}>
-              {post.comments?.map((comment) => (
-                <Comment
-                  key={comment.id}
-                  id={comment.id}
-                  username={comment.user.username}
-                  content={comment.text}
-                  onDelete={(commentId) =>
-                    handleDeleteComment(post.id, commentId)
-                  }
-                  currentUser={currentUser}
-                />
-              ))}
+            <div className={styles.commentsSection}>
+              <h3>Comments:</h3>
+              <div className={styles.comments}>
+                {post.comments?.map((comment) => (
+                  <Comment
+                    key={comment.id}
+                    id={comment.id}
+                    username={comment.user.username}
+                    content={comment.text}
+                    onDelete={(commentId) =>
+                      handleDeleteComment(post.id, commentId)
+                    }
+                    currentUser={currentUser}
+                  />
+                ))}
+              </div>
+              <textarea
+                placeholder="Write a comment..."
+                value={newComments[post.id] || ''}
+                onChange={(e) =>
+                  setNewComments({ ...newComments, [post.id]: e.target.value })
+                }
+                className={styles.textarea}
+              />
+              <button
+                onClick={() => handleAddComment(post.id)}
+                className={styles.submitButton}
+              >
+                Post comment
+              </button>
             </div>
-            <textarea
-              placeholder="Write a comment..."
-              value={newComments[post.id] || ''}
-              onChange={(e) =>
-                setNewComments({ ...newComments, [post.id]: e.target.value })
-              }
-              className={styles.textarea}
-            />
-            <button
-              onClick={() => handleAddComment(post.id)}
-              className={styles.submitButton}
-            >
-              Post comment
-            </button>
           </div>
+        ))
+      )}
+      {posts.length > 0 && (
+        <div className={styles.pagination}>
+          <button onClick={handlePrevPage} disabled={currentPage === 1}>
+            {'<'} Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+          >
+            Next {'>'}
+          </button>
         </div>
-      ))}
-      <div className={styles.pagination}>
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <button
-          onClick={() => setCurrentPage((prev) => (hasMore ? prev + 1 : prev))}
-          disabled={!hasMore}
-        >
-          Next
-        </button>
-      </div>
+      )}
     </div>
   );
 };

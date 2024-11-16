@@ -15,7 +15,7 @@ import * as React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 
-const pages = ['Home', 'My Posts'];
+const pages = ['Home', 'My Posts', 'Add Post'];
 const settings = ['Logout'];
 
 function ResponsiveAppBar() {
@@ -59,6 +59,13 @@ function ResponsiveAppBar() {
           return;
         }
         navigate('/my-posts');
+        break;
+      case 'Add Post': // Новый кейс
+        if (!isAuthenticated) {
+          navigate('/login');
+          return;
+        }
+        navigate('/add-post');
         break;
       default:
         break;
