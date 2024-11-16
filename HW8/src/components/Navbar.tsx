@@ -13,12 +13,16 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
 
 const pages = ['Posts', 'Pricing', 'Blog'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 function ResponsiveAppBar() {
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const { isAuthenticated, userName } = useAppSelector((state) => state.auth);
+
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null
@@ -26,8 +30,6 @@ function ResponsiveAppBar() {
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
     null
   );
-
-  const navigate = useNavigate(); // Хук для навигации
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -45,10 +47,6 @@ function ResponsiveAppBar() {
     setAnchorElUser(null);
   };
 
-  const handleLogin = () => {
-    console.log('Login clicked');
-  };
-
   const handleNavigate = (page: string) => {
     handleCloseNavMenu();
     switch (page) {
@@ -63,6 +61,18 @@ function ResponsiveAppBar() {
         break;
       default:
         break;
+    }
+  };
+
+  const handleUserMenuClick = (setting: string) => {
+    handleCloseUserMenu();
+
+    if (setting === 'Logout') {
+      // Логика выхода из системы
+      dispatch({ type: 'auth/logout' }); // Пример: экшн для сброса состояния авторизации
+      navigate('/login');
+    } else {
+      console.log(`Navigate to ${setting}`);
     }
   };
 
@@ -159,7 +169,7 @@ function ResponsiveAppBar() {
                 <Tooltip title="Open settings">
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                     <Avatar
-                      alt="Remy Sharp"
+                      alt={userName || 'User'}
                       src="/static/images/avatar/2.jpg"
                     />
                   </IconButton>
@@ -181,7 +191,10 @@ function ResponsiveAppBar() {
                   onClose={handleCloseUserMenu}
                 >
                   {settings.map((setting) => (
-                    <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                    <MenuItem
+                      key={setting}
+                      onClick={() => handleUserMenuClick(setting)}
+                    >
                       <Typography sx={{ textAlign: 'center' }}>
                         {setting}
                       </Typography>
@@ -193,7 +206,6 @@ function ResponsiveAppBar() {
               <Button
                 component={Link}
                 to="/login"
-                onClick={handleLogin}
                 sx={{ my: 2, color: 'white', display: 'block' }}
               >
                 LOGIN

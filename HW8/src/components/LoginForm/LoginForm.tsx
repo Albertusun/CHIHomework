@@ -1,22 +1,29 @@
 import React, { useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { login } from '../../store/authSlice';
+import { useNavigate } from 'react-router-dom';
 import styles from './LoginForm.module.css';
-import { Link } from 'react-router-dom';
 
 const LoginForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { isAuthenticated, error } = useAppSelector((state) => state.auth);
 
-  const handleLogin = (event: React.FormEvent) => {
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log('Username:', username);
-    console.log('Password:', password);
-    // Здесь можно добавить логику для аутентификации
+    const result = await dispatch(login({ username, password }));
+    if (login.fulfilled.match(result)) {
+      navigate('/dashboard'); // Redirect to dashboard or home
+    }
   };
 
   return (
     <div className={styles.container}>
       <form onSubmit={handleLogin} className={styles.form}>
         <h2 className={styles.title}>Login</h2>
+        {error && <p className={styles.error}>{error}</p>}
         <input
           type="text"
           placeholder="Username"
@@ -34,9 +41,6 @@ const LoginForm: React.FC = () => {
         <button type="submit" className={styles.button}>
           Login
         </button>
-        <p className={styles.signup}>
-          Not a Member? <Link to="/signup"> Signup</Link>
-        </p>
       </form>
     </div>
   );
