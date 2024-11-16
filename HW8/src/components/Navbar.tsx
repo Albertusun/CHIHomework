@@ -16,7 +16,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 
 const pages = ['Home', 'My Posts'];
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const settings = ['Logout'];
 
 function ResponsiveAppBar() {
   const { isAuthenticated, userName } = useAppSelector((state) => state.auth);
