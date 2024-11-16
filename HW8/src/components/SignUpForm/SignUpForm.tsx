@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 
 const SignupForm: React.FC = () => {
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -15,7 +14,6 @@ const SignupForm: React.FC = () => {
       return;
     }
     console.log('Username:', username);
-    console.log('Email:', email);
     console.log('Password:', password);
     // Здесь можно добавить логику для регистрации
   };
@@ -29,13 +27,6 @@ const SignupForm: React.FC = () => {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className={styles.input}
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
           className={styles.input}
         />
         <input
